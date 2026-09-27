@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Awas Penipu — List Scammer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  --bg: #0A0E14;
+  --bg-soft: #0F141B;
+  --card: #12171F;
+  --card-border: #1E2733;
+  --text: #E7ECF3;
+  --text-dim: #8B98AA;
+  --danger: #FF5470;
+  --danger-dim: #4A2530;
+  --safe: #2DD4BF;
+  --warn: #F5B942;
+  --radius: 10px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,.brand{ font-family:'Sora', sans-serif; }
+.mono{ font-family:'JetBrains Mono', monospace; }
+
+/* Topbar */
+.topbar{
+  display:flex; align-items:center; gap:14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--card-border);
+  background: var(--bg-soft);
+  position: sticky; top:0; z-index: 30;
+}
+.hamburger{
+  width:38px; height:38px; border-radius:8px;
+  background: var(--card); border:1px solid var(--card-border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  cursor:pointer; flex-shrink:0;
+}
+.hamburger span{ width:18px; height:2px; background: var(--text); display:block; border-radius:2px; }
+.brand{ font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+.brand span{ color: var(--danger); }
+.topbar .sub{ font-size:12px; color:var(--text-dim); margin-left:auto; display:none; }
+@media(min-width:640px){ .topbar .sub{ display:block; } }
+
+/* Drawer */
+.overlay{
+  position:fixed; inset:0; background: rgba(0,0,0,.6);
+  opacity:0; pointer-events:none; transition: opacity .2s ease; z-index:40;
+}
+.overlay.open{ opacity:1; pointer-events:auto; }
+.drawer{
+  position:fixed; top:0; left:0; bottom:0; width:260px;
+  background: var(--bg-soft); border-right:1px solid var(--card-border);
+  transform: translateX(-100%); transition: transform .25s ease; z-index:50;
+  display:flex; flex-direction:column; padding: 20px 0;
+}
+.drawer.open{ transform: translateX(0); }
+.drawer-head{ padding: 0 20px 18px; border-bottom:1px solid var(--card-border); margin-bottom:10px; }
+.drawer-head .brand{ font-size:16px; }
+.nav-item{
+  display:flex; align-items:center; gap:12px;
+  padding: 13px 20px; color: var(--text-dim); cursor:pointer;
+  font-size:14px; font-weight:600; border-left: 3px solid transparent;
+}
+.nav-item:hover{ color: var(--text); background: rgba(255,255,255,.03); }
+.nav-item.active{ color: var(--text); border-left-color: var(--danger); background: rgba(255,84,112,.06); }
+.nav-item .dot{ width:6px; height:6px; border-radius:50%; background: var(--text-dim); }
+.nav-item.active .dot{ background: var(--danger); }
+
+main{ max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+.view{ display:none; }
+.view.active{ display:block; animation: fade .2s ease; }
+@keyframes fade{ from{opacity:0; transform: translateY(4px);} to{opacity:1; transform:none;} }
+
+/* Hero */
+.hero{ margin-bottom: 22px; }
+.hero h1{ font-size: 26px; line-height:1.2; font-weight:800; letter-spacing:-0.02em; }
+.hero p{ color: var(--text-dim); font-size:14px; margin-top:8px; max-width:52ch; }
+.stat-row{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+.stat{
+  background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius);
+  padding: 10px 14px; flex:1; min-width:120px;
+}
+.stat .n{ font-family:'JetBrains Mono', monospace; font-size:20px; font-weight:700; }
+.stat .l{ font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+/* Buttons */
+.btn{
+  border:none; border-radius: 8px; padding: 11px 18px; font-weight:600; font-size:14px;
+  cursor:pointer; font-family:'Inter',sans-serif; transition: filter .15s ease;
+}
+.btn:hover{ filter: brightness(1.1); }
+.btn-danger{ background: var(--danger); color: #1A0308; }
+.btn-outline{ background: transparent; color: var(--text); border:1px solid var(--card-border); }
+.btn-safe{ background: var(--safe); color:#03211D; }
+.btn-block{ width:100%; }
+.btn-sm{ padding:7px 12px; font-size:12px; }
+
+/* Form */
+.field{ margin-bottom:14px; }
+.field label{ display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px; font-weight:600; }
+.field input[type=text], .field input[type=password], .field textarea, .field select{
+  width:100%; background: var(--card); border:1px solid var(--card-border); border-radius:8px;
+  padding: 11px 12px; color:var(--text); font-family:'Inter',sans-serif; font-size:14px;
+}
+.field textarea{ min-height:80px; resize:vertical; }
+.field-row{ display:flex; gap:10px; }
+.field-row > div{ flex:1; }
+.file-drop{
+  border:1.5px dashed var(--card-border); border-radius:10px; padding:16px; text-align:center;
+  color: var(--text-dim); font-size:13px; cursor:pointer; position:relative;
+}
+.file-drop input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.preview-imgs{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.preview-imgs img{ width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid var(--card-border); }
+
+.card{
+  background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius);
+  padding: 18px; margin-bottom: 14px;
+}
+
+/* Report card */
+.report{
+  background: var(--card); border:1px solid var(--card-border); border-radius: var(--radius);
+  padding:16px; margin-bottom:12px;
+}
+.report.danger{ border-color: rgba(255,84,112,.5); background: linear-gradient(180deg, rgba(255,84,112,.08), var(--card) 40%); }
+.report-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.report .platform{ font-size:11px; color: var(--text-dim); text-transform: capitalize; }
+.report .contact{ font-family:'JetBrains Mono', monospace; font-size:16px; font-weight:700; margin-top:2px; word-break:break-all; }
+.badge{
+  font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; flex-shrink:0;
+  background: var(--danger-dim); color: var(--danger); white-space:nowrap;
+}
+.report p.desc{ font-size:13px; color: var(--text-dim); margin-top:10px; line-height:1.5; }
+.report .evid{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.report .evid img{ width:84px; height:84px; object-fit:cover; border-radius:6px; cursor:zoom-in; border:1px solid var(--card-border); }
+.report-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+.report-foot .date{ font-size:11px; color: var(--text-dim); }
+.report-foot .actions{ display:flex; gap:8px; }
+.empty{ text-align:center; padding: 50px 20px; color: var(--text-dim); }
+.empty h3{ color: var(--text); margin-bottom:6px; font-size:16px; }
+
+.section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.section-head h2{ font-size:19px; font-weight:800; }
+
+/* Info view */
+.info-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--card-border); }
+.info-row:last-child{ border-bottom:none; }
+.info-row .k{ font-size:13px; color:var(--text-dim); }
+.info-row .v{ font-family:'JetBrains Mono', monospace; font-size:14px; }
+
+/* Modal (image lightbox / confirm) */
+.modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:60; padding:20px; }
+.modal-bg.open{ display:flex; }
+.modal-bg img{ max-width:100%; max-height:85vh; border-radius:8px; }
+.confirm-box{ background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:22px; max-width:320px; }
+.confirm-box p{ font-size:14px; color:var(--text-dim); margin: 10px 0 18px; }
+.confirm-box .row{ display:flex; gap:10px; }
+
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background: var(--card); border:1px solid var(--card-border); padding:12px 18px; border-radius:8px;
+  font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:70;
+}
+.toast.show{ opacity:1; transform: translate(-50%,-6px); }
+
+/* TikTok view */
+.tt-result{ margin-top:16px; }
+.tt-preview{ display:flex; gap:14px; align-items:flex-start; }
+.tt-preview img, .tt-preview video{ width:110px; border-radius:8px; flex-shrink:0; }
+.tt-links{ display:flex; flex-direction:column; gap:8px; flex:1; }
+.spinner{ width:16px; height:16px; border:2px solid var(--card-border); border-top-color: var(--danger); border-radius:50%; animation: spin .7s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* Admin */
+.login-box{ max-width:320px; margin: 30px auto 0; }
+.admin-report-row{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--card-border); }
+.admin-report-row .contact{ font-family:'JetBrains Mono',monospace; font-size:13px; flex:1; word-break:break-all; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
+  <div class="brand">LAPORKAN<span>PENIPU</span></div>
+  <div class="sub">Laporan komunitas — waspada sebelum transaksi</div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="brand">MENU<span>WEBSITE</span></div>
+  </div>
+  <div class="nav-item active" data-view="list"><span class="dot"></span>LIST SCAMMER</div>
+  <div class="nav-item" data-view="info"><span class="dot"></span>INFORMASI</div>
+  <div class="nav-item" data-view="admin"><span class="dot"></span>LOGIN ADMIN</div>
+  <div class="nav-item" data-view="tiktok"><span class="dot"></span>TIKTOK DOWNLOADER</div>
+</div>
+
+<main>
+
+  <!-- LIST SCAMMER -->
+  <div class="view active" id="view-list">
+    <div class="hero">
+      <h1>LAPORKAN SI PENIPU SEGERA DI BAWAH</h1>
+      <p>Masukkan nombor WhatsApp atau username media sosial pelaku beserta bukti ( jika ada ) untuk kami mengambil tindakan. Laporan akan kelihatan kepada semua orang untuk lebih berhati-hati.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="n mono" id="statTotal">0</div><div class="l">Jumlah laporan</div></div>
+        <div class="stat"><div class="n mono" id="statDanger">0</div><div class="l">Ditandai bahaya</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head" style="margin-bottom:14px;"><h2 style="font-size:15px;">Buat laporan segera</h2></div>
+      <div class="field-row">
+        <div class="field">
+          <label>Platform</label>
+          <select id="fPlatform">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="telegram">Telegram</option>
+            <option value="tiktok">Tiktok</option>
+            <option value="facebook">Facebook</option> 
+            <option value="instagram">instagram</option>                      
+          </select>
+        </div>
+        <div class="field">
+          <label>Nombor / Username</label>
+          <input type="text" id="fContact" placeholder="+628xxxx / @username">
+        </div>
+      </div>
+      <div class="field">
+        <label>Modus penipuan (opsional)</label>
+        <textarea id="fDesc" placeholder="Ceritakan bagaimana anda ditipu supaya kami dapat tahu..."></textarea>
+      </div>
+      <div class="field">
+        <label>Bukti screenshot (opsional, maks 2 gambar)</label>
+        <div class="file-drop" id="fileDrop">
+          Tekan untuk unggah gambar bukti
+          <input type="file" id="fFile" accept="image/*" multiple>
+        </div>
+        <div class="preview-imgs" id="previewImgs"></div>
+      </div>
+      <button class="btn btn-danger btn-block" id="submitReportBtn">Hantar laporan</button>
+    </div>
+
+    <div class="section-head">
+      <h2>List Scammer</h2>
+    </div>
+    <div id="reportList"></div>
+  </div>
+
+  <!-- INFORMASI -->
+  <div class="view" id="view-info">
+    <div class="hero"><h1>Informasi</h1><p>Hubungi admin jika ada pertanyaan, laporan salah letak, atau ingin bergabung dengan komuniti.</p></div>
+    <div class="card">
+      <div class="info-row"><div class="k">Tele Admin</div><div class="v" id="infoAdmin">@mateolimit_bot</div></div>
+      <div class="info-row"><div class="k">Channel</div><div class="v" id="infoChannel">@allinformationbymateo</div></div>
+      <div class="info-row"><div class="k">Group</div><div class="v" id="infoGroup">@roompublikmateo</div></div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="view" id="view-admin">
+    <div id="adminLoginArea">
+      <div class="hero"><h1>Login Admin</h1><p>Kawasan ini untuk Admin laman sahaja.</p></div>
+      <div class="login-box card">
+        <div class="field"><label>User</label><input type="text" id="adminUser" placeholder="Admin"></div>
+        <div class="field"><label>Pass</label><input type="password" id="adminPass" placeholder="••••••••"></div>
+        <button class="btn btn-danger btn-block" id="adminLoginBtn">Masuk</button>
+        <p style="font-size:11px;color:var(--text-dim);margin-top:12px;">Nota: Jika ingin username atau password nya anda harus meminta izin ke admin nya di menu informasi.</p>
+      </div>
+    </div>
+    <div id="adminPanelArea" style="display:none;">
+      <div class="section-head"><h2>Panel Admin</h2><button class="btn btn-outline btn-sm" id="adminLogoutBtn">Log keluar</button></div>
+      <div class="card">
+        <h3 style="font-size:14px;margin-bottom:12px;">Kemaskini Informasi</h3>
+        <div class="field"><label>Tele Admin</label><input type="text" id="editAdmin"></div>
+        <div class="field"><label>Channel</label><input type="text" id="editChannel"></div>
+        <div class="field"><label>Group</label><input type="text" id="editGroup"></div>
+        <button class="btn btn-safe btn-block" id="saveInfoBtn">Simpan informasi</button>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;margin-bottom:12px;">Urus semua laporan</h3>
+        <div id="adminReportList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIKTOK -->
+  <div class="view" id="view-tiktok">
+    <div class="hero"><h1>TikTok downloader</h1><p>Tampal pautan video atau foto TikTok untuk mendapatkan pautan muat turun tanpa tera air.</p></div>
+    <div class="card">
+      <div class="field"><label>Pautan TikTok</label><input type="text" id="ttUrl" placeholder="https://www.tiktok.com/@user/video/xxxx"></div>
+      <button class="btn btn-danger btn-block" id="ttBtn">Proses pautan</button>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:10px;">fitur ini bebas di gunakan kapan sahaja jika ingin mendownload pautan tiktok tanpa tera air.</p>
+      <div class="tt-result" id="ttResult"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-bg" id="lightbox"><img id="lightboxImg" src=""></div>
+<div class="modal-bg" id="confirmModal">
+  <div class="confirm-box">
+    <h3 style="font-size:15px;">Padam laporan ini?</h3>
+    <p>Tindakan ini tidak boleh dibatalkan.</p>
+    <div class="row">
+      <button class="btn btn-outline" style="flex:1;" id="confirmCancel">Batal</button>
+      <button class="btn btn-danger" style="flex:1;" id="confirmOk">Padam</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="toast" id="setupBanner" style="bottom:auto; top:70px; max-width:88%; text-align:center;"></div>
+
+<!-- Firebase (untuk laporan yang kelihatan ke SEMUA pengunjung, bukan sekadar peranti sendiri) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+
+<script>
+// =====================================================================
+// LANGKAH SETUP (sekali sahaja, kira-kira 5 minit, PERCUMA):
+// 1. Buka https://console.firebase.google.com -> buat project baharu.
+// 2. Dalam project, klik ikon "</>" (Add app -> Web) -> daftar app -> salin
+//    objek firebaseConfig yang diberikan -> tampal gantikan FIREBASE_CONFIG di bawah.
+// 3. Di menu kiri: Build -> Firestore Database -> Create database -> mode Production.
+// 4. Di menu kiri: Build -> Authentication -> Get started -> Sign-in method ->
+//    aktifkan "Anonymous".
+// 5. Di Firestore -> tab "Rules" -> tampal rules yang disediakan di jawapan chat
+//    -> Publish.
+// 6. Simpan fail ini & host di mana-mana (GitHub Pages / Netlify / Firebase Hosting)
+//    supaya semua orang boleh akses pautan yang sama.
+// =====================================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAIlcJQKmz-gAERRAxZersYV0JNZ_yM2p4",
+  authDomain: "listscammer-95684.firebaseapp.com",
+  projectId: "listscammer-95684",
+  storageBucket: "listscammer-95684.firebasestorage.app",
+  messagingSenderId: "703576537200",
+  appId: "1:703576537200:web:2929be5a8f74763d8d9cb5"
+};
+
+let db = null;
+let auth = null;
+let currentUid = null;
+let firebaseReady = false;
+
+function isConfigured(){
+  return FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('GANTI');
+}
+
+async function initFirebase(){
+  const banner = document.getElementById('setupBanner');
+  if(!isConfigured()){
+    banner.textContent = '⚠ Belum disambungkan ke Firebase — laporan hanya tersimpan di peranti ini. Lihat langkah setup di komen atas kod.';
+    banner.classList.add('show');
+    return false;
+  }
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    await new Promise((resolve, reject)=>{
+      auth.onAuthStateChanged(user=>{
+        if(user){ currentUid = user.uid; firebaseReady = true; resolve(); }
+      });
+      auth.signInAnonymously().catch(reject);
+    });
+    return true;
+  }catch(e){
+    console.error(e);
+    banner.textContent = '⚠ Gagal sambung ke Firebase. Semak firebaseConfig & rules.';
+    banner.classList.add('show');
+    return false;
+  }
+}
+
+const ADMIN_USER = "Admin";
+const ADMIN_PASS = "mateoadminweb";
+let isAdmin = false;
+let pendingDeleteId = null;
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ---------- Navigation ----------
+const drawer = document.getElementById('drawer');
+const overlay = document.getElementById('overlay');
+document.getElementById('hamburgerBtn').onclick = ()=>{ drawer.classList.add('open'); overlay.classList.add('open'); };
+overlay.onclick = ()=>{ drawer.classList.remove('open'); overlay.classList.remove('open'); };
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.onclick = ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+item.dataset.view).classList.add('active');
+    drawer.classList.remove('open'); overlay.classList.remove('open');
+  };
+});
+
+// ---------- Storage helpers ----------
+// Kalau Firebase SUDAH disetup -> laporan tersimpan di Firestore, kelihatan ke SEMUA
+// pengunjung dari peranti mana pun. Kalau BELUM disetup -> jatuh balik ke localStorage
+// (hanya kelihatan di peranti/browser sendiri) supaya laman tetap boleh diuji.
+function lsGet(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function lsSet(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch(e){ console.error(e); return false; }
+}
+async function getInfo(){
+  if(firebaseReady){
+    try{
+      const doc = await db.collection('config').doc('site-info').get();
+      if(doc.exists) return doc.data();
+    }catch(e){ console.error(e); }
+    return {admin:'@username', channel:'@channel', group:'@group'};
+  }
+  return lsGet('site-info', {admin:'@username', channel:'@channel', group:'@group'});
+}
+async function saveInfo(info){
+  if(firebaseReady){
+    try{ await db.collection('config').doc('site-info').set(info); return true; }
+    catch(e){ console.error(e); return false; }
+  }
+  return lsSet('site-info', info);
+}
+async function fetchAllReports(){
+  if(firebaseReady){
+    try{
+      const snap = await db.collection('reports').orderBy('createdAt','desc').get();
+      return snap.docs.map(d=>({id:d.id, ...d.data(), createdAt: d.data().createdAt ? d.data().createdAt.toMillis() : Date.now()}));
+    }catch(e){ console.error(e); return []; }
+  }
+  const idx = lsGet('reports-index', []);
+  return idx.map(id=>lsGet('report:'+id, null)).filter(Boolean);
+}
+async function createReport(report){
+  if(firebaseReady){
+    try{
+      report.ownerUid = currentUid;
+      report.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('reports').add(report);
+      return true;
+    }catch(e){ console.error(e); return false; }
+  }
+  const id = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  report.id = id; report.createdAt = Date.now(); report.ownerUid = 'local';
+  const ok = lsSet('report:'+id, report);
+  if(ok){
+    const idx = lsGet('reports-index', []);
+    idx.unshift(id);
+    lsSet('reports-index', idx);
+  }
+  return ok;
+}
+async function deleteReport(id){
+  if(firebaseReady){
+    try{ await db.collection('reports').doc(id).delete(); return true; }
+    catch(e){ console.error(e); return false; }
+  }
+  const idx = lsGet('reports-index', []);
+  lsSet('reports-index', idx.filter(x=>x!==id));
+  localStorage.removeItem('report:'+id);
+  return true;
+}
+async function updateReportDanger(id, danger){
+  if(firebaseReady){
+    try{ await db.collection('reports').doc(id).update({danger}); return true; }
+    catch(e){ console.error(e); return false; }
+  }
+  const r = lsGet('report:'+id, null);
+  if(r){ r.danger = danger; lsSet('report:'+id, r); }
+  return true;
+}
+async function registerAsAdmin(){
+  if(!firebaseReady) return;
+  try{ await db.collection('admins').doc(currentUid).set({key: ADMIN_PASS}); }
+  catch(e){ console.error(e); }
+}
+
+// ---------- Image handling ----------
+let pendingFiles = [];
+function resizeImage(file){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxW = 480;
+        const scale = Math.min(1, maxW/img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width*scale;
+        canvas.height = img.height*scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('fFile').onchange = async (e)=>{
+  const files = Array.from(e.target.files).slice(0,2);
+  pendingFiles = [];
+  const preview = document.getElementById('previewImgs');
+  preview.innerHTML = '';
+  for(const f of files){
+    const dataUrl = await resizeImage(f);
+    pendingFiles.push(dataUrl);
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    preview.appendChild(img);
+  }
+};
+
+// ---------- Submit report ----------
+document.getElementById('submitReportBtn').onclick = async ()=>{
+  const platform = document.getElementById('fPlatform').value;
+  const contact = document.getElementById('fContact').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  if(!contact){ toast('Sila masukkan nombor atau username'); return; }
+  const btn = document.getElementById('submitReportBtn');
+  btn.disabled = true; btn.textContent = 'Menghantar...';
+  const report = {
+    platform, contact, desc,
+    evidence: pendingFiles,
+    danger: false
+  };
+  const ok = await createReport(report);
+  if(ok){
+    document.getElementById('fContact').value='';
+    document.getElementById('fDesc').value='';
+    document.getElementById('previewImgs').innerHTML='';
+    pendingFiles = [];
+    toast('Laporan berjaya dihantar');
+    await renderReports();
+  }else{
+    toast('Gagal menghantar laporan, cuba lagi (mungkin gambar terlalu besar)');
+  }
+  btn.disabled = false; btn.textContent = 'Hantar laporan';
+};
+
+// ---------- Render reports ----------
+function fmtDate(ts){
+  return new Date(ts).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+}
+function platformLabel(p){
+  return p==='whatsapp' ? 'WhatsApp' : p==='telegram' ? 'Telegram' : 'Media Sosial';
+}
+async function renderReports(){
+  const listEl = document.getElementById('reportList');
+  const adminListEl = document.getElementById('adminReportList');
+  listEl.innerHTML = '';
+  adminListEl.innerHTML = '';
+  let dangerCount = 0;
+  const reports = await fetchAllReports();
+  document.getElementById('statTotal').textContent = reports.length;
+  if(reports.length===0){
+    listEl.innerHTML = '<div class="empty"><h3>Belum ada laporan</h3><p>Jadilah yang pertama melaporkan penipu.</p></div>';
+  }
+  reports.forEach(r=>{
+    if(r.danger) dangerCount++;
+    const canDelete = (firebaseReady && r.ownerUid === currentUid) || (!firebaseReady) || isAdmin;
+    const div = document.createElement('div');
+    div.className = 'report' + (r.danger ? ' danger' : '');
+    div.innerHTML = `
+      <div class="report-top">
+        <div><div class="platform">${platformLabel(r.platform)}</div><div class="contact">${escapeHtml(r.contact)}</div></div>
+        ${r.danger ? '<span class="badge">⚠ BAHAYA</span>' : ''}
+      </div>
+      ${r.desc ? `<p class="desc">${escapeHtml(r.desc)}</p>` : ''}
+      ${r.evidence && r.evidence.length ? `<div class="evid">${r.evidence.map(e=>`<img src="${e}" class="evid-img">`).join('')}</div>` : ''}
+      <div class="report-foot">
+        <span class="date">${fmtDate(r.createdAt)}</span>
+        ${canDelete ? `<div class="actions"><button class="btn btn-outline btn-sm del-btn" data-id="${r.id}">Padam</button></div>` : ''}
+      </div>
+    `;
+    listEl.appendChild(div);
+
+    if(isAdmin){
+      const row = document.createElement('div');
+      row.className = 'admin-report-row';
+      row.innerHTML = `
+        <div class="contact">${platformLabel(r.platform)} · ${escapeHtml(r.contact)}</div>
+        <button class="btn btn-outline btn-sm toggle-danger" data-id="${r.id}">${r.danger?'Buang tanda':'Tandai bahaya'}</button>
+        <button class="btn btn-danger btn-sm del-btn" data-id="${r.id}">Padam</button>
+      `;
+      adminListEl.appendChild(row);
+    }
+  });
+  document.getElementById('statDanger').textContent = dangerCount;
+
+  document.querySelectorAll('.evid-img').forEach(img=>{
+    img.onclick = ()=>{
+      document.getElementById('lightboxImg').src = img.src;
+      document.getElementById('lightbox').classList.add('open');
+    };
+  });
+  document.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.onclick = ()=>{ pendingDeleteId = btn.dataset.id; document.getElementById('confirmModal').classList.add('open'); };
+  });
+  document.querySelectorAll('.toggle-danger').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      const wasDanger = btn.textContent.includes('Buang');
+      const ok = await updateReportDanger(id, !wasDanger);
+      if(ok) await renderReports(); else toast('Gagal mengemaskini, semak rules Firestore');
+    };
+  });
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+document.getElementById('lightbox').onclick = ()=> document.getElementById('lightbox').classList.remove('open');
+document.getElementById('confirmCancel').onclick = ()=>{ pendingDeleteId=null; document.getElementById('confirmModal').classList.remove('open'); };
+document.getElementById('confirmOk').onclick = async ()=>{
+  if(!pendingDeleteId) return;
+  const ok = await deleteReport(pendingDeleteId);
+  toast(ok ? 'Laporan dipadam' : 'Gagal memadam, semak rules Firestore');
+  pendingDeleteId = null;
+  document.getElementById('confirmModal').classList.remove('open');
+  await renderReports();
+};
+
+// ---------- Informasi ----------
+async function renderInfo(){
+  const info = await getInfo();
+  document.getElementById('infoAdmin').textContent = info.admin;
+  document.getElementById('infoChannel').textContent = info.channel;
+  document.getElementById('infoGroup').textContent = info.group;
+  document.getElementById('editAdmin').value = info.admin;
+  document.getElementById('editChannel').value = info.channel;
+  document.getElementById('editGroup').value = info.group;
+}
+
+// ---------- Admin ----------
+document.getElementById('adminLoginBtn').onclick = async ()=>{
+  const u = document.getElementById('adminUser').value.trim();
+  const p = document.getElementById('adminPass').value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    isAdmin = true;
+    await registerAsAdmin();
+    document.getElementById('adminLoginArea').style.display='none';
+    document.getElementById('adminPanelArea').style.display='block';
+    toast('Berjaya log masuk sebagai admin');
+    renderReports();
+  }else{
+    toast('User atau pass salah');
+  }
+};
+document.getElementById('adminLogoutBtn').onclick = ()=>{
+  isAdmin = false;
+  document.getElementById('adminLoginArea').style.display='block';
+  document.getElementById('adminPanelArea').style.display='none';
+  document.getElementById('adminUser').value='';
+  document.getElementById('adminPass').value='';
+  renderReports();
+};
+document.getElementById('saveInfoBtn').onclick = async ()=>{
+  const info = {
+    admin: document.getElementById('editAdmin').value.trim() || '@username',
+    channel: document.getElementById('editChannel').value.trim() || '@channel',
+    group: document.getElementById('editGroup').value.trim() || '@group'
+  };
+  const ok = await saveInfo(info);
+  toast(ok ? 'Informasi disimpan' : 'Gagal menyimpan, semak rules Firestore');
+  await renderInfo();
+};
+
+// ---------- TikTok downloader ----------
+document.getElementById('ttBtn').onclick = async ()=>{
+  const url = document.getElementById('ttUrl').value.trim();
+  const resultEl = document.getElementById('ttResult');
+  if(!url){ toast('Tampal pautan TikTok dahulu'); return; }
+  resultEl.innerHTML = '<p style="font-size:13px;color:var(--text-dim);"><span class="spinner"></span>Memproses pautan...</p>';
+  try{
+    const res = await fetch('https://www.tikwm.com/api/?url=' + encodeURIComponent(url));
+    const data = await res.json();
+    if(data.code !== 0 || !data.data){
+      resultEl.innerHTML = '<p style="font-size:13px;color:var(--danger);">Gagal memproses pautan. Pastikan pautan sah atau cuba lagi.</p>';
+      return;
+    }
+    const d = data.data;
+    let html = '<div class="tt-preview">';
+    html += `<img src="${d.cover || d.origin_cover || ''}">`;
+    html += '<div class="tt-links">';
+    if(d.images && d.images.length){
+      html = '<div style="margin-top:14px;"><p style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Pos ini mengandungi ' + d.images.length + ' gambar:</p>';
+      d.images.forEach((img,i)=>{
+        html += `<a href="${img}" target="_blank" class="btn btn-outline btn-block" style="margin-bottom:8px;">Muat turun gambar ${i+1}</a>`;
+      });
+      html += '</div>';
+    } else {
+      html += `<a href="${d.play}" target="_blank" class="btn btn-danger">Muat turun video (tanpa tera air)</a>`;
+      html += `<a href="${d.music}" target="_blank" class="btn btn-outline">Muat turun audio</a>`;
+      html += '</div></div>';
+    }
+    resultEl.innerHTML = html;
+  }catch(e){
+    resultEl.innerHTML = '<p style="font-size:13px;color:var(--danger);">Perkhidmatan muat turun tidak dapat dihubungi sekarang. Cuba lagi kemudian.</p>';
+    console.error(e);
+  }
+};
+
+// ---------- Init ----------
+(async function init(){
+  await initFirebase();
+  await renderReports();
+  await renderInfo();
+})();
+</script>
+</body>
+</html>
